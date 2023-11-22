@@ -64,7 +64,7 @@ jobs:
           aws-region: us-west-2   
 
     - name: Send to S3 on Success
-      if: success() && needs.create_release.outputs.changes == 'true'
+      if: success() && needs.create_release.outputs.changes == 'false'
       run: |
         # VERSION=$(git describe --tags --abbrev=0)
         # aws s3 cp $VERSION.zip s3://sehel/pass/$VERSION.zip
