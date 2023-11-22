@@ -1,54 +1,76 @@
-name: Main Branch Workflow
+name: Release Workflow
 
 on:
   push:
     branches:
       - main
-  release:
-    types:
-      - created
     paths:
       - '.env'
       - 'settings/**'
+
+      
 permissions:
   id-token: write
   contents: write
-
+  
 jobs:
-  build:
+  create_release:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v2
+    - name: Checkout Repository
+      uses: actions/checkout@v2
 
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
+    - name: configure aws credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
           role-to-assume: arn:aws:iam::489994096722:role/oidc_assume_role-dev
           role-session-name: infraworkersession
-          aws-region: us-west-2
+          aws-region: us-west-2 
 
-      - name: Zip Files
-        run: zip -r archive.zip ./*
+    - name: Check for Changes
+      id: check_changes
+      run: |
+        if [[ ${{ github.ref }} == 'refs/heads/main' && -n "$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -E '(\.env|settings/)')" ]]; then
+          echo "Changes in .env or settings/ detected."
+          echo "::set-output name=changes::true"
+        else
+          echo "No relevant changes detected."
+          echo "::set-output name=changes::false"
+        fi
 
-      - name: Determine Branch
-        id: determine_branch
-        run: echo "::set-output name=branch::$(echo ${GITHUB_REF#refs/heads/})"
+    - name: Create Release and Upload to S3
+      id: create_release
+      if: steps.check_changes.outputs.changes == 'true'
+      run: |
+        VERSION=$(git describe --tags --abbrev=0)
+        zip -r $VERSION.zip .
+        aws s3 cp $VERSION.zip s3://sehel/pass/$VERSION.zip
 
-      - name: Check for Release
-        if: github.event_name == 'release'
-        run: aws s3 cp archive.zip s3://sehel/pass/
+  send_to_s3:
+    needs: create_release
+    runs-on: ubuntu-latest
 
-      - name: Execute Logic for Dev Branch
-        if: github.ref == 'refs/heads/dev'
-        run: |
-          chmod +x dev_script.sh
-          ./dev_script.sh
-          
-      - name: Branch Error Message
-        if: |
-          steps.determine_branch.outputs.branch != 'main' &&
-          steps.determine_branch.outputs.branch != 'dev'
-        run: echo "Branch Error"
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v2
 
+    - name: configure aws credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+          role-to-assume: arn:aws:iam::489994096722:role/oidc_assume_role-dev
+          role-session-name: infraworkersession
+          aws-region: us-west-2   
+
+    - name: Send to S3 on Success
+      if: success() && needs.create_release.outputs.changes == 'true'
+      run: |
+        VERSION=$(git describe --tags --abbrev=0)
+        aws s3 cp $VERSION.zip s3://sehel/pass/$VERSION.zip
+
+    - name: Send to S3 on Failure
+      if: failure()
+      run: |
+        VERSION=$(git describe --tags --abbrev=0)
+        zip -r $VERSION.zip .
+        aws s3 cp $VERSION.zip s3://sehel/fail/$VERSION.zip
