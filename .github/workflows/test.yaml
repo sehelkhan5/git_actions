@@ -1,17 +1,19 @@
-name: CI/CD Workflow
+
+name: Main Branch Workflow
 
 on:
   push:
     branches:
       - main
-      - dev
-
+    paths:
+      - '.env'
+      - 'settings/**'
 permissions:
   id-token: write
   contents: write
 
 jobs:
-  check_changes:
+  build:
     runs-on: ubuntu-latest
 
     steps:
@@ -23,54 +25,17 @@ jobs:
         with:
           role-to-assume: arn:aws:iam::489994096722:role/oidc_assume_role-dev
           role-session-name: infraworkersession
-          aws-region: us-west-2  
+          aws-region: us-west-2    
 
-      # - name: Check if branch is 'main' or 'dev'
-      #   run: |
-      #     if [ "$GITHUB_REF" == "refs/heads/main" ]; then
-      #       echo "Running workflow for 'main' branch."
-      #       CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})
-      #       if echo "$CHANGED_FILES" | grep -E '(\.env|settings/)' &>/dev/null; then
-      #         echo "Changes in '.env' or 'settings/' detected."
-      #       else
-      #         echo "No changes in '.env' or 'settings/'."
-      #         exit 78  # Exit with a neutral status to stop the workflow without failing.
-      #       fi
-      #     elif [ "$GITHUB_REF" == "refs/heads/dev" ]; then
-      #       echo "Running workflow for 'dev' branch."
-      #       # Add your logical code for the 'dev' branch here.
-      #     else
-      #       echo "Branch Error: Unsupported branch."
-      #       exit 1  # Exit with an error status to indicate a failure.
-      #     fi
+      # Add your additional setup steps here, e.g., installing dependencies, building, testing, etc.
 
-  create_release:
-    needs: check_changes
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Create Release
-        if: success()
+      - name: Run Workflow on Changes
         run: |
-          if [ "$GITHUB_REF" == "refs/heads/main" ]; then
-            VERSION=$(git describe --tags --abbrev=0)
-            zip -r source_code.zip .
-            aws s3 cp source_code.zip s3://sehel/pass/${VERSION}_source_code.zip
-          fi
-
-  send_to_s3:
-    needs: create_release
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Send to S3
-        if: success()
-        run: |
-          if [ "$GITHUB_REF" == "refs/heads/main" ]; then
-            VERSION=$(git describe --tags --abbrev=0)
-            aws s3 cp source_code.zip s3://sehel/pass/${VERSION}_source_code.zip
-          elif [ "$GITHUB_REF" == "refs/heads/dev" ]; then
-            # Send current version code to /fails prefix of the same S3 bucket.
-            VERSION=$(git describe --tags --abbrev=0)
-            aws s3 cp . s3://sehel/fails/${VERSION}/ --recursive
+          # Check if .env or anything in the settings/ directory has changed
+          if git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -E '(\.env|settings/)'; then
+            # Your workflow steps go here
+            echo "Changes detected in .env or settings/ directory. Running workflow..."
+            # Add your commands or scripts to be executed when changes are detected.
+          else
+            echo "No relevant changes detected. Skipping workflow execution."
           fi
