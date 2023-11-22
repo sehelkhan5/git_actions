@@ -29,7 +29,7 @@ jobs:
       - name: Run Workflow on Changes
         run: |
           # Get the SHA of the previous commit
-          previous_commit=$(git log -1 --pretty=format:"%H" ${{ github.sha }}^)
+          previous_commit=$(git rev-parse ${{ github.sha }}^)
 
           # Check if .env or anything in the settings/ directory has changed
           if git diff --name-only $previous_commit | grep -E '(\.env|settings/)'; then
