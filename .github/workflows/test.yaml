@@ -30,7 +30,14 @@ jobs:
       
       - name: Run Workflow on Changes
         run: |
-          
+          # Get the commit hash of the previous commit
+          previous_commit=$(git rev-parse ${{ github.event.before }} || echo "4b825dc642cb6eb9a060e54bf8d69288fbee4904")
+
+          # Check if .env or anything in the settings/ directory has changed
+          if git diff --name-only $previous_commit | grep -E '(.env|settings/)'; then
+            # Your workflow steps go here
+            echo "Changes detected in .env or settings/ directory. Running workflow..."
+
             # Create a release and zip the files in the current repository
             version=$(git describe --tags --abbrev=0)
             zip_name="source-code-${version}.zip"
@@ -40,9 +47,16 @@ jobs:
             unzip -l $zip_name
 
             # Upload the source code zip to S3 with a specific prefix
-            aws s3 cp $zip_name s3://sehel/pass/$zip_name
+            aws s3 cp $zip_name s3://your-s3-bucket/pass/$zip_name
 
             echo "Release created and source code zip uploaded to S3."
 
-          
-  
+          elif [ "${{ github.event_name }}" == "push" ] && [ "${{ github.ref }}" == "refs/heads/dev" ]; then
+            # Run logical code for the dev branch
+            echo "Running logical code for the dev branch..."
+
+            # Add your dev branch logic here
+
+          else
+            echo "Branch Error: No relevant changes detected in .env or settings/. Skipping workflow execution."
+          fi
