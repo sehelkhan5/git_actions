@@ -31,7 +31,7 @@ jobs:
     - name: Check for Changes
       id: check_changes
       run: |
-        if [[ ${{ github.ref }} == 'refs/heads/main' && -n "$(git diff .env)" ]]; then
+        if [[ ${{ github.ref }} == 'refs/heads/main' && -n "$(git diff --name-only HEAD^ HEAD .env)" ]]; then
           echo "Changes in .env or settings/ detected."
           echo "::set-output name=changes::true"
         else
