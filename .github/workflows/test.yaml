@@ -26,31 +26,8 @@ jobs:
           role-session-name: infraworkersession
           aws-region: us-west-2
 
-      - name: Run Workflow on Changes
-        run: |
-          # Get the SHA of the previous commit
-          previous_commit=$(git rev-parse ${{ github.sha }}^)
+      - name: Zip Files
+        run: zip -r archive.zip ./*
 
-          # Check if .env or anything in the settings/ directory has changed
-          if git diff --name-only $previous_commit | grep -E '(\.env|settings/)'; then
-            # Your workflow steps go here
-            echo "Changes detected in .env or settings/ directory. Running workflow..."
-
-            # Create a release and zip the files in the current repository
-            version=$(git describe --tags --abbrev=0)
-            zip_name="source-code-${version}.zip"
-            zip -r $zip_name .
-            # Print the list of files in the zip file (for verification purposes)
-            unzip -l $zip_name
-            # Upload the source code zip to S3 with a specific prefix
-            aws s3 cp $zip_name s3://your-s3-bucket/pass/$zip_name
-            echo "Release created and source code zip uploaded to S3."
-
-          elif [ "${{ github.event_name }}" == "push" ] && [ "${{ github.ref }}" == "refs/heads/dev" ]; then
-            # Run logical code for the dev branch
-            echo "Running logical code for the dev branch..."
-            # Add your dev branch logic here
-
-          else
-            echo "Branch Error: No relevant changes detected in .env or settings/. Skipping workflow execution."
-          fi
+      - name: Upload to S3
+        run: aws s3 cp archive.zip s3://sehel/  
