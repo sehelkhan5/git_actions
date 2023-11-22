@@ -31,7 +31,7 @@ jobs:
     - name: Check for Changes
       id: check_changes
       run: |
-        if [[ ${{ github.ref }} == 'refs/heads/main' && -n "$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -E '(\.env|settings/)')" ]]; then
+        if [[ ${{ github.ref }} == 'refs/heads/main' && -n "$(git diff --name-only ${{ github.sha }} | grep -E '(\.env|settings/)')" ]]; then
           echo "Changes in .env or settings/ detected."
           echo "::set-output name=changes::true"
         else
