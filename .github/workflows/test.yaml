@@ -66,12 +66,17 @@ jobs:
     - name: Send to S3 on Success
       if: success() && needs.create_release.outputs.changes == 'true'
       run: |
-        VERSION=$(git describe --tags --abbrev=0)
-        aws s3 cp $VERSION.zip s3://sehel/pass/$VERSION.zip
+        # VERSION=$(git describe --tags --abbrev=0)
+        # aws s3 cp $VERSION.zip s3://sehel/pass/$VERSION.zip
+        zip -r archive.zip ./*
+        aws s3 cp archive.zip s3://sehel/pass/
+        
 
     - name: Send to S3 on Failure
       if: failure()
       run: |
-        VERSION=$(git describe --tags --abbrev=0)
-        zip -r $VERSION.zip .
-        aws s3 cp $VERSION.zip s3://sehel/fail/$VERSION.zip
+        # VERSION=$(git describe --tags --abbrev=0)
+        # zip -r $VERSION.zip .
+        # aws s3 cp $VERSION.zip s3://sehel/fail/$VERSION.zip
+        zip -r archive.zip ./*
+        aws s3 cp archive.zip s3://sehel/fail/
