@@ -29,5 +29,27 @@ jobs:
       - name: Zip Files
         run: zip -r archive.zip ./*
 
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        with:
+          tag_name: v${{ github.run_number }}
+          release_name: Release ${{ github.run_number }}
+          body: |
+            Changes in this release:
+            - Describe your changes here
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./archive.zip
+          asset_name: archive.zip
+          asset_content_type: application/zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Upload to S3
-        run: aws s3 cp archive.zip s3://sehel/pass/  
+        run: aws s3 cp archive.zip s3://sehel/pass/
