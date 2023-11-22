@@ -41,11 +41,14 @@ jobs:
         run: aws s3 cp archive.zip s3://sehel/pass/
 
       - name: Execute Logic for Dev Branch
-        if: steps.determine_branch.outputs.branch == 'dev'
+        if: github.ref == 'refs/heads/dev'
         run: |
-          # Your Bash script for the 'dev' branch
-          echo "Executing logical code for the dev branch"
+          chmod +x dev_script.sh
+          ./dev_script.sh
           
-      # - name: Branch Error Message
-      #   if: steps.determine_branch.outputs.branch != 'main' && steps.determine_branch.outputs.branch != 'dev'
-      #   run: echo "Branch Error: Unknown branch '${{ steps.determine_branch.outputs.branch }}'"
+      - name: Branch Error Message
+        if: |
+          steps.determine_branch.outputs.branch != 'main' &&
+          steps.determine_branch.outputs.branch != 'dev'
+        run: echo "Branch Error"
+
