@@ -24,17 +24,12 @@ jobs:
         with:
           role-to-assume: arn:aws:iam::489994096722:role/oidc_assume_role-dev
           role-session-name: infraworkersession
-          aws-region: us-west-2    
-
-      # Add your additional setup steps here, e.g., installing dependencies, building, testing, etc.
+          aws-region: us-west-2
 
       - name: Run Workflow on Changes
         run: |
-          # Get the commit hash of the previous commit
-          previous_commit=$(git rev-parse "${{ github.event.before }}" || echo "4b825dc642cb6eb9a060e54bf8d69288fbee4904")
-
           # Check if .env or anything in the settings/ directory has changed
-          if git diff --name-only $previous_commit | grep -E '(\.env|settings/)'; then
+          if git diff --name-only ${{ github.event.before }} | grep -E '(\.env|settings/)'; then
             # Your workflow steps go here
             echo "Changes detected in .env or settings/ directory. Running workflow..."
 
@@ -56,3 +51,4 @@ jobs:
           else
             echo "Branch Error: No relevant changes detected in .env or settings/. Skipping workflow execution."
           fi
+
