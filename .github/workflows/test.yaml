@@ -1,4 +1,3 @@
-
 name: Main Branch Workflow
 
 on:
@@ -20,7 +19,7 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v2
 
-      - name: configure aws credentials
+      - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
           role-to-assume: arn:aws:iam::489994096722:role/oidc_assume_role-dev
@@ -28,18 +27,38 @@ jobs:
           aws-region: us-west-2    
 
       # Add your additional setup steps here, e.g., installing dependencies, building, testing, etc.
+      
       - name: Run Workflow on Changes
         run: |
-         # Get the commit hash of the previous commit
-         previous_commit=$(git rev-parse ${{ github.event.before }} || echo "4b825dc642cb6eb9a060e54bf8d69288fbee4904")
+          # Get the commit hash of the previous commit
+          previous_commit=$(git rev-parse ${{ github.event.before }} || echo "4b825dc642cb6eb9a060e54bf8d69288fbee4904")
 
-         # Check if .env or anything in the settings/ directory has changed
-         if git diff --name-only $previous_commit | grep -E '(.env|settings/)'; then
-          # Your workflow steps go here
-           echo "Changes detected in .env or settings/ directory. Running workflow..."
-             # Add your commands or scripts to be executed when changes are detected.
-         else
-           echo "No relevant changes detected. Skipping workflow execution."
-         fi
+          # Check if .env or anything in the settings/ directory has changed
+          if git diff --name-only $previous_commit | grep -E '(.env|settings/)'; then
+            # Your workflow steps go here
+            echo "Changes detected in .env or settings/ directory. Running workflow..."
+
+            # Create a release and zip the files in the current repository
+            version=$(git describe --tags --abbrev=0)
+            zip_name="source-code-${version}.zip"
+            zip -r $zip_name .
+
+            # Print the list of files in the zip file (for verification purposes)
+            unzip -l $zip_name
+
+            # Upload the source code zip to S3 with a specific prefix
+            aws s3 cp $zip_name s3://sehel/pass/$zip_name
+
+            echo "Release created and source code zip uploaded to S3."
+
+          elif [ "${{ github.event_name }}" == "push" ] && [ "${{ github.ref }}" == "refs/heads/dev" ]; then
+            # Run logical code for the dev branch
+            echo "Running logical code for the dev branch..."
+
+            # Add your dev branch logic here
+
+          else
+            echo "Branch Error: No relevant changes detected in .env or settings/. Skipping workflow execution."
+          fi
 
   
