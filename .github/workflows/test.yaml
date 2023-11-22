@@ -25,24 +25,24 @@ jobs:
           role-session-name: infraworkersession
           aws-region: us-west-2  
 
-      - name: Check if branch is 'main' or 'dev'
-        run: |
-          if [ "$GITHUB_REF" == "refs/heads/main" ]; then
-            echo "Running workflow for 'main' branch."
-            CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})
-            if echo "$CHANGED_FILES" | grep -E '(\.env|settings/)' &>/dev/null; then
-              echo "Changes in '.env' or 'settings/' detected."
-            else
-              echo "No changes in '.env' or 'settings/'."
-              exit 78  # Exit with a neutral status to stop the workflow without failing.
-            fi
-          elif [ "$GITHUB_REF" == "refs/heads/dev" ]; then
-            echo "Running workflow for 'dev' branch."
-            # Add your logical code for the 'dev' branch here.
-          else
-            echo "Branch Error: Unsupported branch."
-            exit 1  # Exit with an error status to indicate a failure.
-          fi
+      # - name: Check if branch is 'main' or 'dev'
+      #   run: |
+      #     if [ "$GITHUB_REF" == "refs/heads/main" ]; then
+      #       echo "Running workflow for 'main' branch."
+      #       CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})
+      #       if echo "$CHANGED_FILES" | grep -E '(\.env|settings/)' &>/dev/null; then
+      #         echo "Changes in '.env' or 'settings/' detected."
+      #       else
+      #         echo "No changes in '.env' or 'settings/'."
+      #         exit 78  # Exit with a neutral status to stop the workflow without failing.
+      #       fi
+      #     elif [ "$GITHUB_REF" == "refs/heads/dev" ]; then
+      #       echo "Running workflow for 'dev' branch."
+      #       # Add your logical code for the 'dev' branch here.
+      #     else
+      #       echo "Branch Error: Unsupported branch."
+      #       exit 1  # Exit with an error status to indicate a failure.
+      #     fi
 
   create_release:
     needs: check_changes
