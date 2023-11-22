@@ -52,7 +52,7 @@ jobs:
       - name: Create Release
         if: success()
         run: |
-         if: github.ref == 'refs/heads/main'; then
+         if [ "$GITHUB_REF" == "refs/heads/main" ; then
             VERSION=$(git describe --tags --abbrev=0)
             zip -r source_code.zip .
             aws s3 cp source_code.zip s3://sehel/pass/${VERSION}_source_code.zip
