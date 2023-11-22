@@ -28,14 +28,18 @@ jobs:
           aws-region: us-west-2    
 
       # Add your additional setup steps here, e.g., installing dependencies, building, testing, etc.
-
       - name: Run Workflow on Changes
         run: |
-          # Check if .env or anything in the settings/ directory has changed
-          if git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -E '(\.env|settings/)'; then
-            # Your workflow steps go here
-            echo "Changes detected in .env or settings/ directory. Running workflow..."
-            # Add your commands or scripts to be executed when changes are detected.
-          else
-            echo "No relevant changes detected. Skipping workflow execution."
-          fi
+         # Get the commit hash of the previous commit
+         previous_commit=$(git rev-parse ${{ github.event.before }})
+
+         # Check if .env or anything in the settings/ directory has changed
+         if git diff --name-only $previous_commit ${{ github.sha }} | grep -E '(\.env|settings/)'; then
+          # Your workflow steps go here
+           echo "Changes detected in .env or settings/ directory. Running workflow..."
+             # Add your commands or scripts to be executed when changes are detected.
+         else
+           echo "No relevant changes detected. Skipping workflow execution."
+         fi
+
+  
