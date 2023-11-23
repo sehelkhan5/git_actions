@@ -71,41 +71,43 @@ jobs:
           RELEASE_STATUS_dev:   ${{ steps.set_release.outputs.release_status_dev}}
           RELEASE_STATUS_fail:  ${{ steps.set_release.outputs.release_status_fail}}
 
-          
+
         run: |
-          if [ "${{ github.event_name }}" = "push" ]; then
-            if [ "${{ github.ref }}" = "refs/heads/dev" ]; then
-              echo "Running bash script for dev branch: Hello World!"
-              chmod +x bash.sh
-              bash bash.sh  
-            else
-              if [ "$RELEASE_STATUS_main" = "success" && "$RELEASE_STATUS_dev" = "success"]; then
-                echo "Release is successful. Proceeding with zipping code and sending to S3."
-                # Generate a unique version number or tag for your release
-                VERSION=$(date '+%Y%m%d%H%M%S')
-                ZIP_FILENAME="release_${VERSION}.zip"
+          echo "${{ steps.set_release.outputs.release_status_main}}"
 
-                # Create a zip file with the necessary files
-                zip -r $ZIP_FILENAME .env settings/
+          # if [ "${{ github.event_name }}" = "push" ]; then
+          #   if [ "${{ github.ref }}" = "refs/heads/dev" ]; then
+          #     echo "Running bash script for dev branch: Hello World!"
+          #     chmod +x bash.sh
+          #     bash bash.sh  
+          #   else
+          #     if [ "$RELEASE_STATUS_main" = "success" && "$RELEASE_STATUS_dev" = "success"]; then
+          #       echo "Release is successful. Proceeding with zipping code and sending to S3."
+          #       # Generate a unique version number or tag for your release
+          #       VERSION=$(date '+%Y%m%d%H%M%S')
+          #       ZIP_FILENAME="release_${VERSION}.zip"
 
-                # Upload the zip file to the S3 bucket
-                aws s3 cp $ZIP_FILENAME s3://sehel/pass/
+          #       # Create a zip file with the necessary files
+          #       zip -r $ZIP_FILENAME .env settings/
 
-                echo "Workflow completed successfully."
-              elif [ "$RELEASE_STATUS_fail" = "failure" ]; then
-                echo "Release failed. Sending zip code to S3 fail folder."
+          #       # Upload the zip file to the S3 bucket
+          #       aws s3 cp $ZIP_FILENAME s3://sehel/pass/
 
-                # Continue with your steps to upload the zip file to the S3 fail folder
-                aws s3 cp $ZIP_FILENAME s3://sehel/fail/
+          #       echo "Workflow completed successfully."
+          #     elif [ "$RELEASE_STATUS_fail" = "failure" ]; then
+          #       echo "Release failed. Sending zip code to S3 fail folder."
 
-                echo "Workflow failed."
-                exit 1
-              else
-                echo "Unknown release status. Exiting."
-                exit 1
-              fi
-            fi
-          fi
+          #       # Continue with your steps to upload the zip file to the S3 fail folder
+          #       aws s3 cp $ZIP_FILENAME s3://sehel/fail/
+
+          #       echo "Workflow failed."
+          #       exit 1
+          #     else
+          #       echo "Unknown release status. Exiting."
+          #       exit 1
+          #     fi
+          #   fi
+          # fi
 
   check-new-release:
     runs-on: ubuntu-latest
