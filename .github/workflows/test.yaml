@@ -67,7 +67,8 @@ jobs:
           if [ "${{ github.event_name }}" = "push" ]; then
             if [ "${{ github.ref }}" = "refs/heads/dev" ]; then
               echo "Running bash script for dev branch: Hello World!"
-              bash your_script_for_dev.sh  
+              chmod +x bash.sh
+              bash bash.sh  
             else
               RELEASE_STATUS=${{ steps.set_release_status.outputs.release_status }}
 
