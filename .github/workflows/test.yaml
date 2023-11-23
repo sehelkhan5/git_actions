@@ -62,7 +62,6 @@ jobs:
           role-session-name: infraworkersession
           aws-region: us-west-2 
 
-          
       - name: Check Branch and Run
         run: |
           if [ "${{ github.event_name }}" = "push" ]; then
