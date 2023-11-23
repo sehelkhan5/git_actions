@@ -35,10 +35,7 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" = "push" ]; then
             # Add your custom conditions here to determine the release status
-            if [ "${{ github.ref }}" = "refs/heads/main" ]; then
-              echo "Setting release status to success for the main branch."
-              echo "release_status_main=success" >> $GITHUB_OUTPUT
-            elif [ "${{ github.ref }}" = "refs/heads/dev" ]; then
+            if [ "${{ github.ref }}" = "refs/heads/dev" ]; then
                 echo "Running bash script for dev branch: Hello World!"
                 chmod +x bash.sh
                 bash bash.sh
@@ -65,11 +62,9 @@ jobs:
           aws-region: us-west-2 
 
       - name: Check Branch and Run
-        env:
-          RELEASE_STATUS_main:  ${{ steps.set_release.outputs.release_status_main}}  
         run: |
           if [ "${{ github.event_name }}" = "push" ]; then
-              if [ "$RELEASE_STATUS_main" = "success" ]; then
+              if [ "${{ github.ref }}" = "refs/heads/main"  ]; then
                 echo "Release is successful. Proceeding with zipping code and sending to S3."
                 # Generate a unique version number or tag for your release
                 # VERSION=$(date '+%Y%m%d%H%M%S')
@@ -93,7 +88,7 @@ jobs:
             fi
 
 
-            
+
   check-new-release:
     runs-on: ubuntu-latest
 
