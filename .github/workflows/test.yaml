@@ -71,6 +71,7 @@ jobs:
           RELEASE_STATUS_dev:   ${{ steps.set_release.outputs.release_status_dev}}
           RELEASE_STATUS_fail:  ${{ steps.set_release.outputs.release_status_fail}}
 
+          
         run: |
           if [ "${{ github.event_name }}" = "push" ]; then
             if [ "${{ github.ref }}" = "refs/heads/dev" ]; then
