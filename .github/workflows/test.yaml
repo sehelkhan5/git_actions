@@ -31,7 +31,6 @@ jobs:
       id: test
       shell: bash
       run: |
-        
         VERSION=$(git describe --tags --abbrev=0)
         echo ${VERSION}
         zip -r $VERSION.zip .
