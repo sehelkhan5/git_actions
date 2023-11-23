@@ -69,8 +69,6 @@ jobs:
         env:
           RELEASE_STATUS_main:  ${{ steps.set_release.outputs.release_status_main}}  
         run: |
-          
-
           if [ "${{ github.event_name }}" = "push" ]; then
               if [ "$RELEASE_STATUS_main" = "success" ]; then
                 echo "Release is successful. Proceeding with zipping code and sending to S3."
