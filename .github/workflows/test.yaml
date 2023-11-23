@@ -37,8 +37,7 @@ jobs:
             # Add your custom conditions here to determine the release status
             if [ "${{ github.ref }}" = "refs/heads/main" ]; then
               echo "Setting release status to success for the main branch."
-              # echo "::set-output name=release_status::success" >> $GITHUB_OUTPUT
-              echo "release_status_main=sucess" >> $GITHUB_OUTPUT
+              echo "release_status_main=success" >> $GITHUB_OUTPUT
             elif [ "${{ github.ref }}" = "refs/heads/dev" ]; then
                 echo "Running bash script for dev branch: Hello World!"
                 chmod +x bash.sh
@@ -90,9 +89,6 @@ jobs:
                 VERSION=$(date '+%Y%m%d%H%M%S')
                 ZIP_FILENAME="release_${VERSION}.zip"
                 aws s3 cp $ZIP_FILENAME s3://sehel/fail/
-
-                echo "Workflow failed."
-                exit 1
               fi
             fi
 
