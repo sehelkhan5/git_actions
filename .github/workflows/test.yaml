@@ -52,7 +52,7 @@ jobs:
           fi
       - name: test
         env:
-          RELEASE_STATUS_main:  ${{ steps.set_release.outputs.release_status_main}}  
+          RELEASE_STATUS_main:  ${{ steps.set_release.outputs.release_status_fail}}  
         run: echo "${RELEASE_STATUS_main}"
 
 
