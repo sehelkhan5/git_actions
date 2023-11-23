@@ -31,7 +31,8 @@ jobs:
       id: test
       shell: bash
       run: |
-        VERSION=$(git describe --tags --abbrev=0)
+        git tag | tail -n 1
+        VERSION=$(git tag | tail -n 1)
         echo ${VERSION}
         zip -r $VERSION.zip .
         ls -al
