@@ -30,6 +30,8 @@ jobs:
     - name: check
       id: test
       run: |
+        echo ${{ github.sha }}
+        ls -al
         git diff ${{ github.sha }} ./.env
     # - name: Check for Changes
     #   id: check_changes
