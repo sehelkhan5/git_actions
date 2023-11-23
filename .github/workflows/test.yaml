@@ -30,9 +30,14 @@ jobs:
     - name: check
       id: test
       run: |
-        echo ${{ github.sha }}
+        
+        VERSION=$(git describe --tags --abbrev=0)
+        echo ${VERSION}
+        zip -r $VERSION.zip .
         ls -al
-        git diff ${{ github.sha }} ./.env
+
+
+
     # - name: Check for Changes
     #   id: check_changes
     #   run: |
