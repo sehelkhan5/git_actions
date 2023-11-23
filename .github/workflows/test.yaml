@@ -27,7 +27,10 @@ jobs:
           role-to-assume: arn:aws:iam::489994096722:role/oidc_assume_role-dev
           role-session-name: infraworkersession
           aws-region: us-west-2 
-
+    - name: check
+      id: test
+      run: |
+        git diff ${{ github.sha }} ./.env
     # - name: Check for Changes
     #   id: check_changes
     #   run: |
@@ -39,39 +42,39 @@ jobs:
     #       echo "::set-output name=changes::false"
     #     fi
 
-    - name: Check for .env Changes
-      run: |
-          if [[ ${{ github.ref }} == 'refs/heads/main' && -n "$(git diff --name-only ${{ github.sha }}^ ${{ github.sha }} -- '.*\.env$' 'settings/')" ]]; then
-            echo "Changes in .env or settings/ detected."
-            echo "::set-output name=changes::true"
-          else
-            echo "No relevant changes detected."
-            echo "::set-output name=changes::false"
-          fi
+  #   - name: Check for .env Changes
+  #     run: |
+  #         if [[ ${{ github.ref }} == 'refs/heads/main' && -n "$(git diff --name-only ${{ github.sha }}^ ${{ github.sha }} -- '.*\.env$' 'settings/')" ]]; then
+  #           echo "Changes in .env or settings/ detected."
+  #           echo "::set-output name=changes::true"
+  #         else
+  #           echo "No relevant changes detected."
+  #           echo "::set-output name=changes::false"
+  #         fi
 
-    - name: Create Release and Upload to S3
-      id: create_release
-      if: steps.check_changes.outputs.changes == 'true'
-      run: |
-        # VERSION=$(git describe --tags --abbrev=0)
-        # zip -r $VERSION.zip .
-        zip -r archive.zip ./*
-        aws s3 cp archive.zip s3://sehel/pass/
+  #   - name: Create Release and Upload to S3
+  #     id: create_release
+  #     if: steps.check_changes.outputs.changes == 'true'
+  #     run: |
+  #       # VERSION=$(git describe --tags --abbrev=0)
+  #       # zip -r $VERSION.zip .
+  #       zip -r archive.zip ./*
+  #       aws s3 cp archive.zip s3://sehel/pass/
 
-  send_to_s3:
-    needs: create_release
-    runs-on: ubuntu-latest
+  # send_to_s3:
+  #   needs: create_release
+  #   runs-on: ubuntu-latest
 
-    steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v2
+  #   steps:
+  #   - name: Checkout Repository
+  #     uses: actions/checkout@v2
 
-    - name: configure aws credentials
-      uses: aws-actions/configure-aws-credentials@v2
-      with:
-          role-to-assume: arn:aws:iam::489994096722:role/oidc_assume_role-dev
-          role-session-name: infraworkersession
-          aws-region: us-west-2   
+  #   - name: configure aws credentials
+  #     uses: aws-actions/configure-aws-credentials@v2
+  #     with:
+  #         role-to-assume: arn:aws:iam::489994096722:role/oidc_assume_role-dev
+  #         role-session-name: infraworkersession
+  #         aws-region: us-west-2   
 
     - name: Send to S3 on Success
       if: success() && needs.create_release.outputs.changes == 'true'
