@@ -53,32 +53,33 @@ jobs:
       - name: test
         env:
           RELEASE_STATUS_main:  ${{ steps.set_release.outputs.release_status_main}}  
-        run: echo ${RELEASE_STATUS_main}
-
-  run-workflow:
-    needs: create-release
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          role-to-assume: arn:aws:iam::489994096722:role/oidc_assume_role-dev
-          role-session-name: infraworkersession
-          aws-region: us-west-2 
-
-      - name: Check Branch and Run
-        env:
-          RELEASE_STATUS_main:  ${{ steps.set_release.outputs.release_status_main}}
-          RELEASE_STATUS_dev:   ${{ steps.set_release.outputs.release_status_dev}}
-          RELEASE_STATUS_fail:  ${{ steps.set_release.outputs.release_status_fail}}
+        run: echo "${RELEASE_STATUS_main}"
 
 
-        run: |
-          echo "${{ steps.set_release.outputs.release_status_main}}"
+  # run-workflow:
+  #   needs: create-release
+  #   runs-on: ubuntu-latest
+
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v2
+
+  #     - name: Configure AWS credentials
+  #       uses: aws-actions/configure-aws-credentials@v2
+  #       with:
+  #         role-to-assume: arn:aws:iam::489994096722:role/oidc_assume_role-dev
+  #         role-session-name: infraworkersession
+  #         aws-region: us-west-2 
+
+  #     - name: Check Branch and Run
+  #       env:
+  #         RELEASE_STATUS_main:  ${{ steps.set_release.outputs.release_status_main}}
+  #         RELEASE_STATUS_dev:   ${{ steps.set_release.outputs.release_status_dev}}
+  #         RELEASE_STATUS_fail:  ${{ steps.set_release.outputs.release_status_fail}}
+
+
+        # run: |
+          # echo "${{ steps.set_release.outputs.release_status_main}}"
 
           # if [ "${{ github.event_name }}" = "push" ]; then
           #   if [ "${{ github.ref }}" = "refs/heads/dev" ]; then
