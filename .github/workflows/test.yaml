@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - dev
     paths:
       - '.env'
       - 'settings/**'
@@ -41,80 +40,61 @@ jobs:
               # echo "::set-output name=release_status::success" >> $GITHUB_OUTPUT
               echo "release_status_main=sucess" >> $GITHUB_OUTPUT
             elif [ "${{ github.ref }}" = "refs/heads/dev" ]; then
-              echo "Setting release status to success for the dev branch."
-              # echo "::set-output name=release_status::sucess"
-              echo "release_status_dev=sucess" >> $GITHUB_OUTPUT
-            else
-              echo "Setting release status to failure for branches other than main and dev."
-              # echo "::set-output name=release_status::failure"
-              echo "release_status_fail=failure" >> $GITHUB_OUTPUT
-            fi
+                echo "Running bash script for dev branch: Hello World!"
+                chmod +x bash.sh
+                bash bash.sh
+            else     
+                echo "branch doesnot exist"
+              fi
           fi
-      - name: test
+      
+
+
+  run-workflow:
+    needs: create-release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: arn:aws:iam::489994096722:role/oidc_assume_role-dev
+          role-session-name: infraworkersession
+          aws-region: us-west-2 
+
+      - name: Check Branch and Run
         env:
-          RELEASE_STATUS_fail:  ${{ steps.set_release.outputs.release_status_fail}}  
-        run: echo "${RELEASE_STATUS_fail}"
+          RELEASE_STATUS_main:  ${{ steps.set_release.outputs.release_status_main}}  
+        run: |
+          
 
+          if [ "${{ github.event_name }}" = "push" ]; then
+              if [ "$RELEASE_STATUS_main" = "success" ]; then
+                echo "Release is successful. Proceeding with zipping code and sending to S3."
+                # Generate a unique version number or tag for your release
+                VERSION=$(date '+%Y%m%d%H%M%S')
+                ZIP_FILENAME="release_${VERSION}.zip"
 
+                # Create a zip file with the necessary files
+                zip -r $ZIP_FILENAME .env settings/
 
-  # run-workflow:
-  #   needs: create-release
-  #   runs-on: ubuntu-latest
+                # Upload the zip file to the S3 bucket
+                aws s3 cp $ZIP_FILENAME s3://sehel/pass/
 
-  #   steps:
-  #     - name: Checkout code
-  #       uses: actions/checkout@v2
+                echo "Workflow completed successfully."
+              else
+                echo "Release failed. Sending zip code to S3 fail folder."
 
-  #     - name: Configure AWS credentials
-  #       uses: aws-actions/configure-aws-credentials@v2
-  #       with:
-  #         role-to-assume: arn:aws:iam::489994096722:role/oidc_assume_role-dev
-  #         role-session-name: infraworkersession
-  #         aws-region: us-west-2 
+                # Continue with your steps to upload the zip file to the S3 fail folder
+                aws s3 cp $ZIP_FILENAME s3://sehel/fail/
 
-  #     - name: Check Branch and Run
-  #       env:
-  #         RELEASE_STATUS_main:  ${{ steps.set_release.outputs.release_status_main}}
-  #         RELEASE_STATUS_dev:   ${{ steps.set_release.outputs.release_status_dev}}
-  #         RELEASE_STATUS_fail:  ${{ steps.set_release.outputs.release_status_fail}}
-
-
-        # run: |
-          # echo "${{ steps.set_release.outputs.release_status_main}}"
-
-          # if [ "${{ github.event_name }}" = "push" ]; then
-          #   if [ "${{ github.ref }}" = "refs/heads/dev" ]; then
-          #     echo "Running bash script for dev branch: Hello World!"
-          #     chmod +x bash.sh
-          #     bash bash.sh  
-          #   else
-          #     if [ "$RELEASE_STATUS_main" = "success" && "$RELEASE_STATUS_dev" = "success"]; then
-          #       echo "Release is successful. Proceeding with zipping code and sending to S3."
-          #       # Generate a unique version number or tag for your release
-          #       VERSION=$(date '+%Y%m%d%H%M%S')
-          #       ZIP_FILENAME="release_${VERSION}.zip"
-
-          #       # Create a zip file with the necessary files
-          #       zip -r $ZIP_FILENAME .env settings/
-
-          #       # Upload the zip file to the S3 bucket
-          #       aws s3 cp $ZIP_FILENAME s3://sehel/pass/
-
-          #       echo "Workflow completed successfully."
-          #     elif [ "$RELEASE_STATUS_fail" = "failure" ]; then
-          #       echo "Release failed. Sending zip code to S3 fail folder."
-
-          #       # Continue with your steps to upload the zip file to the S3 fail folder
-          #       aws s3 cp $ZIP_FILENAME s3://sehel/fail/
-
-          #       echo "Workflow failed."
-          #       exit 1
-          #     else
-          #       echo "Unknown release status. Exiting."
-          #       exit 1
-          #     fi
-          #   fi
-          # fi
+                echo "Workflow failed."
+                exit 1
+              fi
+            fi
 
 
   check-new-release:
