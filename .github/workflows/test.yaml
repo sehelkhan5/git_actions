@@ -1,4 +1,4 @@
-name: Release Workflow
+name: Main and Dev Branch Workflow
 
 on:
   push:
@@ -7,97 +7,110 @@ on:
     paths:
       - '.env'
       - 'settings/**'
+  release:
+    types:
+      - published
 
-      
 permissions:
-  id-token: write
-  contents: write
-  
+    id-token: write
+    contents: write
+
 jobs:
-  create_release:
+  create-release:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    - name: configure aws credentials
-      uses: aws-actions/configure-aws-credentials@v2
-      with:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
           role-to-assume: arn:aws:iam::489994096722:role/oidc_assume_role-dev
           role-session-name: infraworkersession
           aws-region: us-west-2 
-    - name: check
-      id: test
-      shell: bash
-      run: |
-        git tag | tail -n 1
-        VERSION=$(git tag | tail -n 1)
-        echo ${VERSION}
-        zip -r $VERSION.zip .
-        ls -al
 
+      - name: Check conditions and Set Release Status
+        id: set_release_status
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            # Add your custom conditions here to determine the release status
+            if [ "${{ github.ref }}" = "refs/heads/main" ]; then
+              echo "Setting release status to success for the main branch."
+              echo "::set-output name=release_status::success"
+            elif [ "${{ github.ref }}" = "refs/heads/dev" ]; then
+              echo "Setting release status to success for the dev branch."
+              echo "::set-output name=release_status::success"
+            else
+              echo "Setting release status to failure for branches other than main and dev."
+              echo "::set-output name=release_status::failure"
+            fi
+          fi
 
+  run-workflow:
+    needs: create-release
+    runs-on: ubuntu-latest
 
-    # - name: Check for Changes
-    #   id: check_changes
-    #   run: |
-    #     if [[ ${{ github.ref }} == 'refs/heads/main' && "$(git diff ${{ github.sha }} ./.env)" ]]; then
-    #       echo "Changes in .env or settings/ detected."
-    #       echo "::set-output name=changes::true"
-    #     else
-    #       echo "No relevant changes detected."
-    #       echo "::set-output name=changes::false"
-    #     fi
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-  #   - name: Check for .env Changes
-  #     run: |
-  #         if [[ ${{ github.ref }} == 'refs/heads/main' && -n "$(git diff --name-only ${{ github.sha }}^ ${{ github.sha }} -- '.*\.env$' 'settings/')" ]]; then
-  #           echo "Changes in .env or settings/ detected."
-  #           echo "::set-output name=changes::true"
-  #         else
-  #           echo "No relevant changes detected."
-  #           echo "::set-output name=changes::false"
-  #         fi
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: arn:aws:iam::489994096722:role/oidc_assume_role-dev
+          role-session-name: infraworkersession
+          aws-region: us-west-2 
 
-  #   - name: Create Release and Upload to S3
-  #     id: create_release
-  #     if: steps.check_changes.outputs.changes == 'true'
-  #     run: |
-  #       # VERSION=$(git describe --tags --abbrev=0)
-  #       # zip -r $VERSION.zip .
-  #       zip -r archive.zip ./*
-  #       aws s3 cp archive.zip s3://sehel/pass/
+      - name: Check Branch and Run
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            if [ "${{ github.ref }}" = "refs/heads/dev" ]; then
+              echo "Running bash script for dev branch: Hello World!"
+              bash your_script_for_dev.sh  
+            else
+              RELEASE_STATUS=${{ needs.create-release.outputs.set_release_status }}
 
-  # send_to_s3:
-  #   needs: create_release
-  #   runs-on: ubuntu-latest
+              if [ "$RELEASE_STATUS" = "success" ]; then
+                echo "Release is successful. Proceeding with zipping code and sending to S3."
+                # Generate a unique version number or tag for your release
+                VERSION=$(date '+%Y%m%d%H%M%S')
+                ZIP_FILENAME="release_${VERSION}.zip"
 
-  #   steps:
-  #   - name: Checkout Repository
-  #     uses: actions/checkout@v2
+                # Create a zip file with the necessary files
+                zip -r $ZIP_FILENAME .env settings/
 
-  #   - name: configure aws credentials
-  #     uses: aws-actions/configure-aws-credentials@v2
-  #     with:
-  #         role-to-assume: arn:aws:iam::489994096722:role/oidc_assume_role-dev
-  #         role-session-name: infraworkersession
-  #         aws-region: us-west-2   
+                # Upload the zip file to the S3 bucket
+                aws s3 cp $ZIP_FILENAME s3://sehel/pass/
 
-    - name: Send to S3 on Success
-      if: success() && needs.create_release.outputs.changes == 'true'
-      run: |
-        # VERSION=$(git describe --tags --abbrev=0)
-        # aws s3 cp $VERSION.zip s3://sehel/pass/$VERSION.zip
-        zip -r archive.zip ./*
-        aws s3 cp archive.zip s3://sehel/pass/
-        
+                echo "Workflow completed successfully."
+              elif [ "$RELEASE_STATUS" = "failure" ]; then
+                echo "Release failed. Sending zip code to S3 fail folder."
 
-    - name: Send to S3 on Failure
-      if: failure()
-      run: |
-        # VERSION=$(git describe --tags --abbrev=0)
-        # zip -r $VERSION.zip .
-        # aws s3 cp $VERSION.zip s3://sehel/fail/$VERSION.zip
-        zip -r archive.zip ./*
-        aws s3 cp archive.zip s3://sehel/fail/
+                # Continue with your steps to upload the zip file to the S3 fail folder
+                aws s3 cp $ZIP_FILENAME s3://sehel/fail/
+
+                echo "Workflow failed."
+                exit 1
+              else
+                echo "Unknown release status. Exiting."
+                exit 1
+              fi
+            fi
+          fi
+
+  check-new-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Check for new release
+        run: |
+          if [ "${{ github.event_name }}" = "release" ]; then
+            echo "New release detected. Running empty workflow."
+          else
+            echo "No new release detected. Skipping empty workflow."
+            exit 0
+          fi
