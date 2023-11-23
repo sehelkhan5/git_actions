@@ -31,19 +31,22 @@ jobs:
           aws-region: us-west-2 
 
       - name: Check conditions and Set Release Status
-        id: set_release_status
+        id: set_release
         run: |
           if [ "${{ github.event_name }}" = "push" ]; then
             # Add your custom conditions here to determine the release status
             if [ "${{ github.ref }}" = "refs/heads/main" ]; then
               echo "Setting release status to success for the main branch."
-              echo "::set-output name=release_status::success"
+              # echo "::set-output name=release_status::success" >> $GITHUB_OUTPUT
+              echo "release_status_main=sucess" >> $GITHUB_OUTPUT
             elif [ "${{ github.ref }}" = "refs/heads/dev" ]; then
               echo "Setting release status to success for the dev branch."
-              echo "::set-output name=release_status::success"
+              # echo "::set-output name=release_status::sucess"
+              echo "release_status_dev=sucess" >> $GITHUB_OUTPUT
             else
               echo "Setting release status to failure for branches other than main and dev."
-              echo "::set-output name=release_status::failure"
+              # echo "::set-output name=release_status::failure"
+              echo "release_status_fail=failure" >> $GITHUB_OUTPUT
             fi
           fi
 
@@ -63,6 +66,11 @@ jobs:
           aws-region: us-west-2 
 
       - name: Check Branch and Run
+        env:
+          RELEASE_STATUS_main:  ${{ steps.set_release.outputs.release_status_main}}
+          RELEASE_STATUS_dev:   ${{ steps.set_release.outputs.release_status_dev}}
+          RELEASE_STATUS_fail:  ${{ steps.set_release.outputs.release_status_fail}}
+
         run: |
           if [ "${{ github.event_name }}" = "push" ]; then
             if [ "${{ github.ref }}" = "refs/heads/dev" ]; then
@@ -70,9 +78,7 @@ jobs:
               chmod +x bash.sh
               bash bash.sh  
             else
-              RELEASE_STATUS=${{ steps.set_release_status.outputs.release_status }}
-
-              if [ "$RELEASE_STATUS" = "success" ]; then
+              if [ "$RELEASE_STATUS_main" = "success" && "$RELEASE_STATUS_dev" = "success"]; then
                 echo "Release is successful. Proceeding with zipping code and sending to S3."
                 # Generate a unique version number or tag for your release
                 VERSION=$(date '+%Y%m%d%H%M%S')
@@ -85,7 +91,7 @@ jobs:
                 aws s3 cp $ZIP_FILENAME s3://sehel/pass/
 
                 echo "Workflow completed successfully."
-              elif [ "$RELEASE_STATUS" = "failure" ]; then
+              elif [ "$RELEASE_STATUS_fail" = "failure" ]; then
                 echo "Release failed. Sending zip code to S3 fail folder."
 
                 # Continue with your steps to upload the zip file to the S3 fail folder
