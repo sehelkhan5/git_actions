@@ -52,11 +52,11 @@ jobs:
           fi
       - name: test
         env:
-          RELEASE_STATUS_main:  ${{ steps.set_release.outputs.release_status_fail}}  
-        run: echo "${RELEASE_STATUS_main}"
+          RELEASE_STATUS_fail:  ${{ steps.set_release.outputs.release_status_fail}}  
+        run: echo "${RELEASE_STATUS_fail}"
 
 
-        
+
   # run-workflow:
   #   needs: create-release
   #   runs-on: ubuntu-latest
