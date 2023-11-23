@@ -49,6 +49,10 @@ jobs:
               echo "release_status_fail=failure" >> $GITHUB_OUTPUT
             fi
           fi
+      - name: test
+        env:
+          RELEASE_STATUS_main:  ${{ steps.set_release.outputs.release_status_main}}  
+        run: echo ${RELEASE_STATUS_main}
 
   run-workflow:
     needs: create-release
@@ -109,7 +113,7 @@ jobs:
           #   fi
           # fi
 
-          
+
   check-new-release:
     runs-on: ubuntu-latest
 
