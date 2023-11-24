@@ -70,6 +70,7 @@ jobs:
 
                 # Create a zip file with the necessary files
                 zip -r ZIP_FILENAME .env settings/
+                
 
                 # Upload the zip file to the S3 bucket
                 aws s3 cp ZIP_FILENAME s3://sehel/pass/
