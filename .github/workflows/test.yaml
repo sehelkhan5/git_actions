@@ -64,15 +64,15 @@ jobs:
           if [ "${{ github.event_name }}" = "push" ]; then
               if [ "${{ github.ref }}" = "refs/heads/main"  ]; then
                 echo "Release is successful. Proceeding with zipping code and sending to S3."
-                # Generate a unique version number or tag for your release
-                # VERSION=$(date '+%Y%m%d%H%M%S')
-                # ZIP_FILENAME="release_${VERSION}.zip"
+                Generate a unique version number or tag for your release
+                VERSION=$(date '+%Y%m%d%H%M%S')
+                ZIP_FILENAME="release_${VERSION}.zip"
 
                 # Create a zip file with the necessary files
-                zip -r sehel .env settings/
+                zip -r ZIP_FILENAME .env settings/
 
                 # Upload the zip file to the S3 bucket
-                aws s3 cp sehel s3://sehel/pass/
+                aws s3 cp ZIP_FILENAME s3://sehel/pass/
 
                 echo "Workflow completed successfully."
               else
