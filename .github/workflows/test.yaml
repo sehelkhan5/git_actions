@@ -227,6 +227,7 @@ jobs:
 
           LATEST_COMMIT=$(git log -1 --pretty=format:"%H")
           echo "Latest Commit SHA: $LATEST_COMMIT"
+          
 
           if [ "$PREVIOUS_COMMIT" = "$LATEST_COMMIT" ]; then
             echo "No new commits since the previous commit."
