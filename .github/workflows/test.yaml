@@ -92,14 +92,14 @@ jobs:
 
 
                 # Upload the zip file to the S3 bucket
-                aws s3 cp archive.zip s3://sehel/pass/
+                aws s3 cp $ZIP_FILENAME s3://sehel/pass/
 
                 echo "Workflow completed successfully."
               else
                 echo "Release failed. Sending zip code to S3 fail folder."
 
                 # Continue with your steps to upload the zip file to the S3 fail folder
-                VERSION=$(date '+%Y%m%d%H%M%S')
+                # VERSION=$(date '+%Y%m%d%H%M%S')
                 ZIP_FILENAME="release_${VERSION}.zip"
                 zip -r $ZIP_FILENAME .env settings/
                 aws s3 cp $ZIP_FILENAME s3://sehel/fail/
