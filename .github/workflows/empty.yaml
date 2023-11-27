@@ -10,8 +10,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+        - name: Checkout code
+          uses: actions/checkout@v2
+  
+        - name: Configure AWS credentials
+          uses: aws-actions/configure-aws-credentials@v2
+          with:
+            role-to-assume: arn:aws:iam::489994096722:role/oidc_assume_role-dev
+            role-session-name: infraworkersession
+            aws-region: us-west-2 
+
+        - name: hello world 
+          run:  |
+           echo "yo shadab bhai."
 
       # Add any additional steps or commands as needed
 
