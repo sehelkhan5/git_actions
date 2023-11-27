@@ -192,7 +192,7 @@ jobs:
         run: |
            PREVIOUS_COMMIT_SHA=$(git log -n 2 --pretty=format:"%H" | tail -n 2 | head -n 1)
            # echo "Previous Commit SHA: $PREVIOUS_COMMIT_SHA"
-           echo "PREVIOUS_COMMIT_SHA=$PREVIOUS_COMMIT" >> $GITHUB_ENV
+           echo "PREVIOUS_COMMIT_SHA=$PREVIOUS_COMMIT_SHA" >> $GITHUB_ENV
            echo "LATEST_COMMIT_SHA=${{ github.sha }}" >> $GITHUB_ENV
 
       - name: Display commit SHAs
