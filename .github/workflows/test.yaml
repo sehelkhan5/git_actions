@@ -131,17 +131,82 @@
 
 
 
-name: Compare Commits and Send to S3
+# name: Compare Commits and Send to S3
+
+# on:
+#   push:
+#     branches:
+#       - main
+
+# permissions:
+#     id-token: write
+#     contents: write
+
+
+# jobs:
+#   compare-commits:
+#     runs-on: ubuntu-latest
+
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v2
+
+#       - name: Configure AWS credentials
+#         uses: aws-actions/configure-aws-credentials@v2
+#         with:
+#           role-to-assume: arn:aws:iam::489994096722:role/oidc_assume_role-dev
+#           role-session-name: infraworkersession
+#           aws-region: us-west-2 
+
+#       - name: Get commit SHAs
+#         id: commit_shas
+#         run: |
+#            PREVIOUS_COMMIT_SHA=$(git log -1 --pretty=format:"%H^")
+#            # echo "Previous Commit SHA: $PREVIOUS_COMMIT_SHA"
+#            echo "PREVIOUS_COMMIT_SHA=$PREVIOUS_COMMIT_SHA" >> $GITHUB_ENV
+#            echo "LATEST_COMMIT_SHA=${{ github.sha }}" >> $GITHUB_ENV
+
+#       - name: Display commit SHAs
+#         run: |
+#           echo "Previous Commit SHA: $PREVIOUS_COMMIT_SHA"
+#           echo "Latest Commit SHA: $LATEST_COMMIT_SHA"
+
+#       # - name: Check for changes
+#       #   id: check_changes
+#       #   run: echo "::set-output name=changes::$(git diff --name-only $PREVIOUS_COMMIT_SHA $LATEST_COMMIT_SHA | wc -l)"
+#       - name: Check for changes
+#         id: check_changes
+#         run: |
+#           changes=$(git diff --name-only $PREVIOUS_COMMIT_SHA $LATEST_COMMIT_SHA | wc -l)
+#           echo "CHANGES=$changes" >> $GITHUB_ENV
+#           echo "$changes"
+          
+
+#       - name: Compare Commitssss
+#         run: git diff --name-only $PREVIOUS_COMMIT_SHA $LATEST_COMMIT_SHA
+
+#       - name: Create and Send to S3
+#         if: steps.check_changes.outputs.changes !='0'
+#         run: |
+#           # Generate a unique version number or tag for your release
+#           VERSION=$(date '+%Y%m%d%H%M%S')
+#           ZIP_FILENAME="release_${VERSION}.zip"
+
+#           # Create a zip file with the necessary files
+#           zip -r $ZIP_FILENAME .
+
+#           # Upload the zip file to the S3 bucket
+#           aws s3 cp $ZIP_FILENAME s3://sehel/pass/
+
+#           echo "Changes detected. Zip file sent to S3."
+
+
+name: Compare Commits
 
 on:
   push:
     branches:
       - main
-
-permissions:
-    id-token: write
-    contents: write
-
 
 jobs:
   compare-commits:
@@ -151,51 +216,26 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          role-to-assume: arn:aws:iam::489994096722:role/oidc_assume_role-dev
-          role-session-name: infraworkersession
-          aws-region: us-west-2 
-
-      - name: Get commit SHAs
-        id: commit_shas
+      - name: Store previous commit in a file
         run: |
-           PREVIOUS_COMMIT_SHA=$(git log -1 --pretty=format:"%H^")
-           # echo "Previous Commit SHA: $PREVIOUS_COMMIT_SHA"
-           echo "PREVIOUS_COMMIT_SHA=$PREVIOUS_COMMIT_SHA" >> $GITHUB_ENV
-           echo "LATEST_COMMIT_SHA=${{ github.sha }}" >> $GITHUB_ENV
+          git log -1 --pretty=format:"%H" > previous_commit.log
 
-      - name: Display commit SHAs
+      - name: Retrieve and compare commit IDs
         run: |
-          echo "Previous Commit SHA: $PREVIOUS_COMMIT_SHA"
-          echo "Latest Commit SHA: $LATEST_COMMIT_SHA"
+          PREVIOUS_COMMIT=$(cat previous_commit.log)
+          echo "Previous Commit SHA: $PREVIOUS_COMMIT"
 
-      # - name: Check for changes
-      #   id: check_changes
-      #   run: echo "::set-output name=changes::$(git diff --name-only $PREVIOUS_COMMIT_SHA $LATEST_COMMIT_SHA | wc -l)"
-      - name: Check for changes
-        id: check_changes
-        run: |
-          changes=$(git diff --name-only $PREVIOUS_COMMIT_SHA $LATEST_COMMIT_SHA | wc -l)
-          echo "CHANGES=$changes" >> $GITHUB_ENV
-          echo "$changes"
-          
+          LATEST_COMMIT=$(git log -1 --pretty=format:"%H")
+          echo "Latest Commit SHA: $LATEST_COMMIT"
 
-      - name: Compare Commitssss
-        run: git diff --name-only $PREVIOUS_COMMIT_SHA $LATEST_COMMIT_SHA
-
-      - name: Create and Send to S3
-        if: steps.check_changes.outputs.changes !='0'
-        run: |
-          # Generate a unique version number or tag for your release
-          VERSION=$(date '+%Y%m%d%H%M%S')
-          ZIP_FILENAME="release_${VERSION}.zip"
-
-          # Create a zip file with the necessary files
-          zip -r $ZIP_FILENAME .
-
-          # Upload the zip file to the S3 bucket
-          aws s3 cp $ZIP_FILENAME s3://sehel/pass/
-
-          echo "Changes detected. Zip file sent to S3."
+          if [ "$PREVIOUS_COMMIT" = "$LATEST_COMMIT" ]; then
+            echo "No new commits since the previous commit."
+          else
+            echo "New commits detected."
+            # Add your logic for further actions (e.g., create and send a zip file to S3)
+            # Example:
+            # VERSION=$(date '+%Y%m%d%H%M%S')
+            # ZIP_FILENAME="release_${VERSION}.zip"
+            # zip -r $ZIP_FILENAME .
+            # aws s3 cp $ZIP_FILENAME s3://your-s3-bucket/
+          fi
