@@ -207,6 +207,7 @@ jobs:
         run: |
           changes=$(git diff --name-only $PREVIOUS_COMMIT_SHA $LATEST_COMMIT_SHA | wc -l)
           echo "CHANGES=$changes" >> $GITHUB_ENV
+          echo "$changes"
           
 
       - name: Compare Commits
