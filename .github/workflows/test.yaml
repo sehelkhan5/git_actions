@@ -144,14 +144,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Get previous commit SHA
-        id: previous_commit
-        run: echo "::set-output name=sha::$(git rev-parse  HEAD~1)"
+      - name: Get commit SHAs
+        id: commit_shas
+        run: |
+          PREVIOUS_COMMIT=$(git log -1 --pretty=%H)
+          echo "PREVIOUS_COMMIT_SHA=$PREVIOUS_COMMIT" >> $GITHUB_ENV
+          echo "LATEST_COMMIT_SHA=${{ github.sha }}" >> $GITHUB_ENV
 
       - name: Display commit SHAs
         run: |
-          echo "Previous Commit SHA: ${{ steps.previous_commit.outputs.sha }}"
-          echo "Latest Commit SHA: ${{ github.sha }}"
+          echo "Previous Commit SHA: $PREVIOUS_COMMIT_SHA"
+          echo "Latest Commit SHA: $LATEST_COMMIT_SHA"
 
       - name: Compare Commits
-        run: git diff --name-only ${{ steps.previous_commit.outputs.sha }} ${{ github.sha }}
+        run: git diff --name-only $PREVIOUS_COMMIT_SHA $LATEST_COMMIT_SHA
