@@ -199,9 +199,15 @@ jobs:
           echo "Previous Commit SHA: $PREVIOUS_COMMIT_SHA"
           echo "Latest Commit SHA: $LATEST_COMMIT_SHA"
 
+      # - name: Check for changes
+      #   id: check_changes
+      #   run: echo "::set-output name=changes::$(git diff --name-only $PREVIOUS_COMMIT_SHA $LATEST_COMMIT_SHA | wc -l)"
       - name: Check for changes
         id: check_changes
-        run: echo "::set-output name=changes::$(git diff --name-only $PREVIOUS_COMMIT_SHA $LATEST_COMMIT_SHA | wc -l)"
+        run: |
+          changes=$(git diff --name-only $PREVIOUS_COMMIT_SHA $LATEST_COMMIT_SHA | wc -l)
+          echo "CHANGES=$changes" >> $GITHUB_ENV
+          echo "::set-output name=changes::$changes"
 
       - name: Compare Commits
         run: git diff --name-only $PREVIOUS_COMMIT_SHA $LATEST_COMMIT_SHA
