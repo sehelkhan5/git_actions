@@ -30,6 +30,24 @@ jobs:
           role-session-name: infraworkersession
           aws-region: us-west-2 
 
+
+      - name: Update api version
+        id: increment_version
+        run: |
+            current_version=$(awk -F= '/WORKOUT_PARSER_VERSION/{print $2}' bash.sh)
+            new_version=$((current_version + 1))
+            sed -i "s/WORKOUT_PARSER_VERSION = [0-9]*/WORKOUT_PARSER_VERSION = $new_version/" bash.sh
+            echo "version=$new_version" >> $GITHUB_OUTPUT
+  
+      - name: Create Release
+        env:
+          APP_VERSION: ${{ steps.increment_version.outputs.version }}
+        uses: ncipollo/release-action@v1
+        with:
+            name: Release-${{ env.APP_VERSION }}
+            tag: ${{ env.APP_VERSION }}
+            generateReleaseNotes: yes
+
       - name: Check conditions and Set Release Status
         id: set_release
         run: |
@@ -65,24 +83,25 @@ jobs:
               if [ "${{ github.ref }}" = "refs/heads/main"  ]; then
                 echo "Release is successful. Proceeding with zipping code and sending to S3."
                 Generate a unique version number or tag for your release
-                VERSION=$(date '+%Y%m%d%H%M%S')
-                ZIP_FILENAME="release_${VERSION}.zip"
+                # VERSION=$(date '+%Y%m%d%H%M%S')
+                # ZIP_FILENAME="release_${VERSION}.zip"
 
                 # Create a zip file with the necessary files
-                zip -r ZIP_FILENAME .env settings/
-                
+                zip -r archive.zip .env settings/
+
 
                 # Upload the zip file to the S3 bucket
-                aws s3 cp ZIP_FILENAME s3://sehel/pass/
+                aws s3 cp archive.zip s3://sehel/pass/
 
                 echo "Workflow completed successfully."
               else
                 echo "Release failed. Sending zip code to S3 fail folder."
 
                 # Continue with your steps to upload the zip file to the S3 fail folder
-                VERSION=$(date '+%Y%m%d%H%M%S')
-                ZIP_FILENAME="release_${VERSION}.zip"
-                aws s3 cp $ZIP_FILENAME s3://sehel/fail/
+                # VERSION=$(date '+%Y%m%d%H%M%S')
+                # ZIP_FILENAME="release_${VERSION}.zip"
+
+                aws s3 cp archive.zip s3://sehel/fail/
               fi
             fi
 
