@@ -31,7 +31,6 @@ jobs:
           role-session-name: infraworkersession
           aws-region: us-west-2 
 
-
       - name: Update api version
         id: increment_version
         run: |
@@ -117,14 +116,14 @@ jobs:
 
 
   
-  check-new-release:
-            if: github.ref == 'refs/heads/main'
-            permissions:
-              id-token: write   # This is required for requesting the JWT through OIDC
-              contents: write    # This is required for actions/checkout
-              issues: write
-              pull-requests: write
-            uses: ./.github/workflows/empty.yaml
-            secrets:
-              token: ${{ secrets.GITHUB_TOKEN }}
+  # check-new-release:
+  #           if: github.ref == 'refs/heads/main'
+  #           permissions:
+  #             id-token: write   # This is required for requesting the JWT through OIDC
+  #             contents: write    # This is required for actions/checkout
+  #             issues: write
+  #             pull-requests: write
+  #           uses: ./.github/workflows/empty.yaml
+  #           secrets:
+  #             token: ${{ secrets.GITHUB_TOKEN }}
             
