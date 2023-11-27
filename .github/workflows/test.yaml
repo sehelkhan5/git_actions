@@ -84,15 +84,15 @@ jobs:
               if [ "${{ github.ref }}" = "refs/heads/main"  ]; then
                 echo "Release is successful. Proceeding with zipping code and sending to S3."
                 # Generate a unique version number or tag for your release
-                # VERSION=$(date '+%Y%m%d%H%M%S')
-                # ZIP_FILENAME="release_${VERSION}.zip"
+                VERSION=$(date '+%Y%m%d%H%M%S')
+                ZIP_FILENAME="release_${VERSION}.zip"
 
                 # Create a zip file with the necessary files
-                zip -r archive.zip .env settings/
+                zip -r $ZIP_FILENAME .env settings/
 
 
                 # Upload the zip file to the S3 bucket
-                aws s3 cp archive.zip s3://sehel/pass/
+                aws s3 cp $ZIP_FILENAME.zip s3://sehel/pass/
 
                 echo "Workflow completed successfully."
               else
