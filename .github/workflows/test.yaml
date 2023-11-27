@@ -1,130 +1,158 @@
-name: Main and Dev Branch Workflow
+# name: Main and Dev Branch Workflow
+
+# on:
+#   push:
+#     branches:
+#       - main
+#     paths:
+#       - '.env'
+#       - 'settings/**'
+#   release:
+#     types:
+#       - published
+
+      
+# permissions:
+#     id-token: write
+#     contents: write
+
+# jobs:
+#   create-release:
+#     runs-on: ubuntu-latest
+
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v2
+
+#       - name: Configure AWS credentials
+#         uses: aws-actions/configure-aws-credentials@v2
+#         with:
+#           role-to-assume: arn:aws:iam::489994096722:role/oidc_assume_role-dev
+#           role-session-name: infraworkersession
+#           aws-region: us-west-2 
+
+#       - name: Update api version
+#         id: increment_version
+#         run: |
+#             current_version=$(awk -F= '/WORKOUT_PARSER_VERSION/{print $2}' bash.sh)
+#             new_version=$((current_version + 1))
+#             sed -i "s/WORKOUT_PARSER_VERSION = [0-9]*/WORKOUT_PARSER_VERSION = $new_version/" bash.sh
+#             echo "version=$new_version" >> $GITHUB_OUTPUT
+            
+#       # - name: Push updated api version on github
+#       #   env:
+#       #       APP_VERSION: ${{ steps.increment_version.outputs.version }}
+#       #   run: |
+#       #         git config --global user.name 'GitHub Actions'
+#       #         git config --global user.email 'actions@users.noreply.github.com'
+#       #         git add .
+#       #         git commit -m "Bumped WORKOUT_PARSER_VERSION to $APP_VERSION"
+#       #         git push
+      
+#       - name: Create Release
+#         env:
+#           APP_VERSION: ${{ steps.increment_version.outputs.version }}
+#         uses: ncipollo/release-action@v1
+#         with:
+#             name: Release-${{ env.APP_VERSION }}
+#             tag: ${{ env.APP_VERSION }}
+#             generateReleaseNotes: yes
+
+#       - name: Check conditions and Set Release Status
+#         id: set_release
+#         run: |
+#           if [ "${{ github.event_name }}" = "push" ]; then
+#             # Add your custom conditions here to determine the release status
+#             if [ "${{ github.ref }}" = "refs/heads/dev" ]; then
+#                 echo "Running bash script for dev branch: Hello World!"
+#                 chmod +x bash.sh
+#                 bash bash.sh
+#             else     
+#                 echo "branch doesnot exist"
+#               fi
+#           fi
+      
+#   run-workflow:
+#     needs: create-release
+#     runs-on: ubuntu-latest
+
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v2
+
+#       - name: Configure AWS credentials
+#         uses: aws-actions/configure-aws-credentials@v2
+#         with:
+#           role-to-assume: arn:aws:iam::489994096722:role/oidc_assume_role-dev
+#           role-session-name: infraworkersession
+#           aws-region: us-west-2 
+
+#       - name: Check Branch and Run
+#         run: |
+#           if [ "${{ github.event_name }}" = "push" ]; then
+#               if [ "${{ github.ref }}" = "refs/heads/main"  ]; then
+#                 echo "Release is successful. Proceeding with zipping code and sending to S3."
+#                 # Generate a unique version number or tag for your release
+#                 VERSION=$(date '+%Y%m%d%H%M%S')
+#                 ZIP_FILENAME="release_${VERSION}.zip"
+
+#                 # Create a zip file with the necessary files
+#                 zip -r $ZIP_FILENAME .env settings/
+
+
+#                 # Upload the zip file to the S3 bucket
+#                 aws s3 cp $ZIP_FILENAME s3://sehel/pass/
+
+#                 echo "Workflow completed successfully."
+#               else
+#                 echo "Release failed. Sending zip code to S3 fail folder."
+
+#                 # Continue with your steps to upload the zip file to the S3 fail folder
+#                 # VERSION=$(date '+%Y%m%d%H%M%S')
+#                 ZIP_FILENAME="release_${VERSION}.zip"
+#                 zip -r $ZIP_FILENAME .env settings/
+#                 aws s3 cp $ZIP_FILENAME s3://sehel/fail/
+#               fi
+#             fi
+
+
+  
+#   # check-new-release:
+#   #           if: github.ref == 'refs/heads/main'
+#   #           permissions:
+#   #             id-token: write   # This is required for requesting the JWT through OIDC
+#   #             contents: write    # This is required for actions/checkout
+#   #             issues: write
+#   #             pull-requests: write
+#   #           uses: ./.github/workflows/empty.yaml
+#   #           secrets:
+#   #             token: ${{ secrets.GITHUB_TOKEN }}
+            
+
+
+name: Compare Commits
 
 on:
   push:
     branches:
       - main
-    paths:
-      - '.env'
-      - 'settings/**'
-  release:
-    types:
-      - published
-
-      
-permissions:
-    id-token: write
-    contents: write
 
 jobs:
-  create-release:
+  compare-commits:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          role-to-assume: arn:aws:iam::489994096722:role/oidc_assume_role-dev
-          role-session-name: infraworkersession
-          aws-region: us-west-2 
+      - name: Get previous commit SHA
+        id: previous_commit
+        run: echo "::set-output name=sha::$(git rev-parse HEAD^1)"
 
-      - name: Update api version
-        id: increment_version
+      - name: Display commit SHAs
         run: |
-            current_version=$(awk -F= '/WORKOUT_PARSER_VERSION/{print $2}' bash.sh)
-            new_version=$((current_version + 1))
-            sed -i "s/WORKOUT_PARSER_VERSION = [0-9]*/WORKOUT_PARSER_VERSION = $new_version/" bash.sh
-            echo "version=$new_version" >> $GITHUB_OUTPUT
-            
-      - name: Push updated api version on github
-        env:
-            APP_VERSION: ${{ steps.increment_version.outputs.version }}
-        run: |
-              git config --global user.name 'GitHub Actions'
-              git config --global user.email 'actions@users.noreply.github.com'
-              git add .
-              git commit -m "Bumped WORKOUT_PARSER_VERSION to $APP_VERSION"
-              git push
-      
-      - name: Create Release
-        env:
-          APP_VERSION: ${{ steps.increment_version.outputs.version }}
-        uses: ncipollo/release-action@v1
-        with:
-            name: Release-${{ env.APP_VERSION }}
-            tag: ${{ env.APP_VERSION }}
-            generateReleaseNotes: yes
+          echo "Previous Commit SHA: ${{ steps.previous_commit.outputs.sha }}"
+          echo "Latest Commit SHA: ${{ github.sha }}"
 
-      - name: Check conditions and Set Release Status
-        id: set_release
-        run: |
-          if [ "${{ github.event_name }}" = "push" ]; then
-            # Add your custom conditions here to determine the release status
-            if [ "${{ github.ref }}" = "refs/heads/dev" ]; then
-                echo "Running bash script for dev branch: Hello World!"
-                chmod +x bash.sh
-                bash bash.sh
-            else     
-                echo "branch doesnot exist"
-              fi
-          fi
-      
-  run-workflow:
-    needs: create-release
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          role-to-assume: arn:aws:iam::489994096722:role/oidc_assume_role-dev
-          role-session-name: infraworkersession
-          aws-region: us-west-2 
-
-      - name: Check Branch and Run
-        run: |
-          if [ "${{ github.event_name }}" = "push" ]; then
-              if [ "${{ github.ref }}" = "refs/heads/main"  ]; then
-                echo "Release is successful. Proceeding with zipping code and sending to S3."
-                # Generate a unique version number or tag for your release
-                VERSION=$(date '+%Y%m%d%H%M%S')
-                ZIP_FILENAME="release_${VERSION}.zip"
-
-                # Create a zip file with the necessary files
-                zip -r $ZIP_FILENAME .env settings/
-
-
-                # Upload the zip file to the S3 bucket
-                aws s3 cp $ZIP_FILENAME s3://sehel/pass/
-
-                echo "Workflow completed successfully."
-              else
-                echo "Release failed. Sending zip code to S3 fail folder."
-
-                # Continue with your steps to upload the zip file to the S3 fail folder
-                # VERSION=$(date '+%Y%m%d%H%M%S')
-                ZIP_FILENAME="release_${VERSION}.zip"
-                zip -r $ZIP_FILENAME .env settings/
-                aws s3 cp $ZIP_FILENAME s3://sehel/fail/
-              fi
-            fi
-
-
-  
-  # check-new-release:
-  #           if: github.ref == 'refs/heads/main'
-  #           permissions:
-  #             id-token: write   # This is required for requesting the JWT through OIDC
-  #             contents: write    # This is required for actions/checkout
-  #             issues: write
-  #             pull-requests: write
-  #           uses: ./.github/workflows/empty.yaml
-  #           secrets:
-  #             token: ${{ secrets.GITHUB_TOKEN }}
-            
+      - name: Compare Commits
+        run: git diff --name-only ${{ steps.previous_commit.outputs.sha }} ${{ github.sha }}
