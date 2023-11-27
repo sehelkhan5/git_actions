@@ -190,7 +190,7 @@ jobs:
       - name: Get commit SHAs
         id: commit_shas
         run: |
-           PREVIOUS_COMMIT_SHA=$(git ls-remote $URL refs/heads/main)
+           PREVIOUS_COMMIT_SHA=$(git log --oneline)
            # echo "Previous Commit SHA: $PREVIOUS_COMMIT_SHA"
            echo "PREVIOUS_COMMIT_SHA=$PREVIOUS_COMMIT_SHA" >> $GITHUB_ENV
            echo "LATEST_COMMIT_SHA=${{ github.sha }}" >> $GITHUB_ENV
