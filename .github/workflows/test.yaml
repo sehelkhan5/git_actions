@@ -38,6 +38,7 @@ jobs:
             new_version=$((current_version + 1))
             sed -i "s/WORKOUT_PARSER_VERSION = [0-9]*/WORKOUT_PARSER_VERSION = $new_version/" bash.sh
             echo "version=$new_version" >> $GITHUB_OUTPUT
+            
       - name: Push updated api version on github
         env:
             APP_VERSION: ${{ steps.increment_version.outputs.version }}
