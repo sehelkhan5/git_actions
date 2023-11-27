@@ -210,7 +210,7 @@ jobs:
           echo "$changes"
           
 
-      - name: Compare Commits
+      - name: Compare Commit
         run: git diff --name-only $PREVIOUS_COMMIT_SHA $LATEST_COMMIT_SHA
 
       - name: Create and Send to S3
