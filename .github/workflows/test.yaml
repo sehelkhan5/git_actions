@@ -83,7 +83,7 @@ jobs:
           if [ "${{ github.event_name }}" = "push" ]; then
               if [ "${{ github.ref }}" = "refs/heads/main"  ]; then
                 echo "Release is successful. Proceeding with zipping code and sending to S3."
-                Generate a unique version number or tag for your release
+                # Generate a unique version number or tag for your release
                 # VERSION=$(date '+%Y%m%d%H%M%S')
                 # ZIP_FILENAME="release_${VERSION}.zip"
 
