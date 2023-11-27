@@ -32,22 +32,22 @@ jobs:
           aws-region: us-west-2 
 
 
-      - name: Update api version
-        id: increment_version
-        run: |
-            current_version=$(awk -F= '/WORKOUT_PARSER_VERSION/{print $2}' bash.sh)
-            new_version=$((current_version + 1))
-            sed -i "s/WORKOUT_PARSER_VERSION = [0-9]*/WORKOUT_PARSER_VERSION = $new_version/" bash.sh
-            echo "version=$new_version" >> $GITHUB_OUTPUT
+      # - name: Update api version
+      #   id: increment_version
+      #   run: |
+      #       current_version=$(awk -F= '/WORKOUT_PARSER_VERSION/{print $2}' bash.sh)
+      #       new_version=$((current_version + 1))
+      #       sed -i "s/WORKOUT_PARSER_VERSION = [0-9]*/WORKOUT_PARSER_VERSION = $new_version/" bash.sh
+      #       echo "version=$new_version" >> $GITHUB_OUTPUT
   
-      - name: Create Release
-        env:
-          APP_VERSION: ${{ steps.increment_version.outputs.version }}
-        uses: ncipollo/release-action@v1
-        with:
-            name: Release-${{ env.APP_VERSION }}
-            tag: ${{ env.APP_VERSION }}
-            generateReleaseNotes: yes
+      # - name: Create Release
+      #   env:
+      #     APP_VERSION: ${{ steps.increment_version.outputs.version }}
+      #   uses: ncipollo/release-action@v1
+      #   with:
+      #       name: Release-${{ env.APP_VERSION }}
+      #       tag: ${{ env.APP_VERSION }}
+      #       generateReleaseNotes: yes
 
       - name: Check conditions and Set Release Status
         id: set_release
