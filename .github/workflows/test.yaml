@@ -92,7 +92,7 @@ jobs:
 
 
                 # Upload the zip file to the S3 bucket
-                aws s3 cp $ZIP_FILENAME.zip s3://sehel/pass/
+                aws s3 cp $ZIP_FILENAME s3://sehel/pass/
 
                 echo "Workflow completed successfully."
               else
