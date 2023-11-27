@@ -214,7 +214,7 @@ jobs:
         run: git diff --name-only $PREVIOUS_COMMIT_SHA $LATEST_COMMIT_SHA
 
       - name: Create and Send to S3
-        if: steps.check_changes.outputs.changes 
+        if: steps.check_changes.outputs.changes !='0'
         run: |
           # Generate a unique version number or tag for your release
           VERSION=$(date '+%Y%m%d%H%M%S')
