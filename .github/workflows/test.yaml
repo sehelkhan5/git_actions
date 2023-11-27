@@ -146,7 +146,7 @@ jobs:
 
       - name: Get previous commit SHA
         id: previous_commit
-        run: echo "::set-output name=sha::$(git rev-parse HEAD^1)"
+        run: echo "::set-output name=sha::$(git rev-parse  HEAD~1)"
 
       - name: Display commit SHAs
         run: |
