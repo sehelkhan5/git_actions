@@ -4,9 +4,6 @@ on:
   push:
     branches:
       - main
-    paths:
-      - '.env'
-      - 'settings/**'
   release:
     types:
       - published
@@ -59,77 +56,77 @@ jobs:
             tag: ${{ env.APP_VERSION }}
             generateReleaseNotes: yes
 
-      - name: Check conditions and Set Release Status
-        id: set_release
-        run: |
-          if [ "${{ github.event_name }}" = "push" ]; then
-            # Add your custom conditions here to determine the release status
-            if [ "${{ github.ref }}" = "refs/heads/dev" ]; then
-                echo "Running bash script for dev branch: Hello World!"
-                chmod +x bash.sh
-                bash bash.sh
-            else     
-                echo "branch doesnot exist"
-              fi
-          fi
+      # - name: Check conditions and Set Release Status
+      #   id: set_release
+      #   run: |
+      #     if [ "${{ github.event_name }}" = "push" ]; then
+      #       # Add your custom conditions here to determine the release status
+      #       if [ "${{ github.ref }}" = "refs/heads/dev" ]; then
+      #           echo "Running bash script for dev branch: Hello World!"
+      #           chmod +x bash.sh
+      #           bash bash.sh
+      #       else     
+      #           echo "branch doesnot exist"
+      #         fi
+      #     fi
       
-  run-workflow:
-    needs: create-release
-    runs-on: ubuntu-latest
+  # run-workflow:
+  #   needs: create-release
+  #   runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v2
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          role-to-assume: arn:aws:iam::489994096722:role/oidc_assume_role-dev
-          role-session-name: infraworkersession
-          aws-region: us-west-2 
+  #     - name: Configure AWS credentials
+  #       uses: aws-actions/configure-aws-credentials@v2
+  #       with:
+  #         role-to-assume: arn:aws:iam::489994096722:role/oidc_assume_role-dev
+  #         role-session-name: infraworkersession
+  #         aws-region: us-west-2 
 
-      - name: Check Branch and Run
-        run: |
-          if [ "${{ github.event_name }}" = "push" ]; then
-              if [ "${{ github.ref }}" = "refs/heads/main"  ]; then
-                echo "Release is successful. Proceeding with zipping code and sending to S3."
-                # Generate a unique version number or tag for your release
-                VERSION=$(date '+%Y%m%d%H%M%S')
-                ZIP_FILENAME="release_${VERSION}.zip"
+  #     - name: Check Branch and Run
+  #       run: |
+  #         if [ "${{ github.event_name }}" = "push" ]; then
+  #             if [ "${{ github.ref }}" = "refs/heads/main"  ]; then
+  #               echo "Release is successful. Proceeding with zipping code and sending to S3."
+  #               # Generate a unique version number or tag for your release
+  #               VERSION=$(date '+%Y%m%d%H%M%S')
+  #               ZIP_FILENAME="release_${VERSION}.zip"
 
-                # Create a zip file with the necessary files
-                zip -r $ZIP_FILENAME .env settings/
+  #               # Create a zip file with the necessary files
+  #               zip -r $ZIP_FILENAME .env settings/
 
 
-                # Upload the zip file to the S3 bucket
-                aws s3 cp $ZIP_FILENAME s3://sehel/pass/
+  #               # Upload the zip file to the S3 bucket
+  #               aws s3 cp $ZIP_FILENAME s3://sehel/pass/
 
-                echo "Workflow completed successfully."
-              else
-                echo "Release failed. Sending zip code to S3 fail folder."
+  #               echo "Workflow completed successfully."
+  #             else
+  #               echo "Release failed. Sending zip code to S3 fail folder."
 
-                # Continue with your steps to upload the zip file to the S3 fail folder
-                # VERSION=$(date '+%Y%m%d%H%M%S')
-                ZIP_FILENAME="release_${VERSION}.zip"
-                zip -r $ZIP_FILENAME .env settings/
-                aws s3 cp $ZIP_FILENAME s3://sehel/fail/
-              fi
-            fi
+  #               # Continue with your steps to upload the zip file to the S3 fail folder
+  #               # VERSION=$(date '+%Y%m%d%H%M%S')
+  #               ZIP_FILENAME="release_${VERSION}.zip"
+  #               zip -r $ZIP_FILENAME .env settings/
+  #               aws s3 cp $ZIP_FILENAME s3://sehel/fail/
+  #             fi
+  #           fi
 
 
   
-  check-new-release:
-            if: github.ref == 'refs/heads/main'
-            permissions:
-              id-token: write   # This is required for requesting the JWT through OIDC
-              contents: write    # This is required for actions/checkout
-              issues: write
-              pull-requests: write
-            uses: ./.github/workflows/empty.yaml
-            secrets:
-              token: ${{ secrets.GITHUB_TOKEN }}
+  # check-new-release:
+  #           if: github.ref == 'refs/heads/main'
+  #           permissions:
+  #             id-token: write   # This is required for requesting the JWT through OIDC
+  #             contents: write    # This is required for actions/checkout
+  #             issues: write
+  #             pull-requests: write
+  #           uses: ./.github/workflows/empty.yaml
+  #           secrets:
+  #             token: ${{ secrets.GITHUB_TOKEN }}
             
 
-              
+
 
 
